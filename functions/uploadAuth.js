@@ -1,4 +1,19 @@
+import express from 'express';
+import cors from 'cors';
+import serverless from 'serverless-http';
 import ImageKit from "imagekit";
+
+const app = express();
+
+// Configure CORS
+const corsOptions = {
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 
 const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
@@ -6,27 +21,17 @@ const imagekit = new ImageKit({
   privateKey: process.env.IMAGE_KIT_PRIVATE_KEY,
 });
 
-exports.handler = async (event, context) => {
-  const headers = {
-    "Access-Control-Allow-Origin": process.env.CLIENT_URL,
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
-  };
+app.get('/.netlify/functions/uploadAuth', async (req, res) => {
+  console.log("Handling GET request in uploadAuth");
 
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers,
-    };
+  try {
+    const result = imagekit.getAuthenticationParameters();
+    console.log("Generated ImageKit authentication parameters");
+    res.json(result);
+  } catch (err) {
+    console.error("Error in uploadAuth:", err);
+    res.status(500).json({ error: "Error generating authentication parameters: " + err.message });
   }
+});
 
-  if (event.httpMethod !== "GET") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
-
-  const result = imagekit.getAuthenticationParameters();
-  return {
-    statusCode: 200,
-    body: JSON.stringify(result),
-  };
-};
+export const handler = serverless(app);
