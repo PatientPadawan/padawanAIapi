@@ -1,54 +1,33 @@
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import mongoose from "mongoose";
 import UserChats from "../models/userChats.js";
+import cors from 'cors';
+import serverless from 'serverless-http';
+import express from 'express';
 
-const corsWrapper = (handler) => {
-  return async (event, context) => {
-    const headers = {
-      "Access-Control-Allow-Origin": process.env.CLIENT_URL,
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
-      "Access-Control-Allow-Credentials": "true",
-    };
+const app = express();
 
-    if (event.httpMethod === "OPTIONS") {
-      return {
-        statusCode: 204,
-        headers,
-        body: "",
-      };
-    }
-
-    const response = await handler(event, context);
-    return {
-      ...response,
-      headers: { ...response.headers, ...headers },
-    };
-  };
+// Configure CORS
+const corsOptions = {
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
-exports.handler = corsWrapper(
-  ClerkExpressRequireAuth()(async (event, context) => {
-    if (event.httpMethod !== "GET") {
-      return { statusCode: 405, body: "Method Not Allowed" };
-    }
+app.use(cors(corsOptions));
 
-    const userId = event.auth.userId;
+app.get('/getUserChats', ClerkExpressRequireAuth(), async (req, res) => {
+  const userId = req.auth.userId;
 
-    try {
-      await mongoose.connect(process.env.MONGO);
+  try {
+    await mongoose.connect(process.env.MONGO);
+    const userChats = await UserChats.find({ userId });
+    res.json(userChats[0].chats);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error fetching user chats!" });
+  }
+});
 
-      const userChats = await UserChats.find({ userId });
-      return {
-        statusCode: 200,
-        body: JSON.stringify(userChats[0].chats),
-      };
-    } catch (err) {
-      console.log(err);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "Error fetching user chats!" }),
-      };
-    }
-  })
-);
+exports.handler = serverless(app);

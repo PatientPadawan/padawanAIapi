@@ -1,10 +1,7 @@
-[build]
-  functions = "functions"
-
 [[headers]]
   for = "/*"
-  [headers.values]
+    [headers.values]
     Access-Control-Allow-Origin = "https://ai.patientpadawan.dev"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     Access-Control-Allow-Credentials = "true"
