@@ -1,87 +1,78 @@
+import express from 'express';
+import cors from 'cors';
+import serverless from 'serverless-http';
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import mongoose from "mongoose";
 import Chat from "../models/chat.js";
-import UserChats from "../models/userChats.js";
+import UserChatsModule from "../models/userChats.js";
 
-const corsWrapper = (handler) => {
-  return async (event, context) => {
-    const headers = {
-      "Access-Control-Allow-Origin": process.env.CLIENT_URL,
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
-      "Access-Control-Allow-Credentials": "true",
-    };
+const UserChats = UserChatsModule.default || UserChatsModule;
 
-    if (event.httpMethod === "OPTIONS") {
-      return {
-        statusCode: 200,
-        headers,
-      };
-    }
+const app = express();
 
-    const response = await handler(event, context);
-    return {
-      ...response,
-      headers: { ...response.headers, ...headers },
-    };
-  };
+// Configure CORS
+const corsOptions = {
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
-exports.handler = corsWrapper(
-  ClerkExpressRequireAuth()(async (event, context) => {
-    if (event.httpMethod !== "POST") {
-      return { statusCode: 405, body: "Method Not Allowed" };
-    }
+app.use(cors(corsOptions));
 
-    const userId = event.auth.userId;
-    const { text } = JSON.parse(event.body);
+app.post('/.netlify/functions/createChat', ClerkExpressRequireAuth(), async (req, res) => {
+  console.log("Handling POST request in createChat");
+  const userId = req.auth.userId;
 
-    try {
-      await mongoose.connect(process.env.MONGO);
+  const { text } = req.body;
 
-      const newChat = new Chat({
+  try {
+    console.log("Connecting to MongoDB");
+    await mongoose.connect(process.env.MONGO);
+    console.log("Connected to MongoDB");
+
+    console.log("Creating new chat");
+    const newChat = new Chat({
+      userId: userId,
+      history: [{ role: "user", parts: [{ text }] }],
+    });
+    const savedChat = await newChat.save();
+
+    console.log("Updating UserChats");
+    const userChats = await UserChats.find({ userId: userId });
+
+    if (userChats.length === 0) {
+      const newUserChats = new UserChats({
         userId: userId,
-        history: [{ role: "user", parts: [{ text }] }],
+        chats: [
+          {
+            _id: savedChat._id,
+            title: text.substring(0, 40),
+          },
+        ],
       });
-      const savedChat = await newChat.save();
-
-      const userChats = await UserChats.find({ userId: userId });
-
-      if (!userChats.length) {
-        const newUserChats = new UserChats({
-          userId: userId,
-          chats: [
-            {
-              _id: savedChat.id,
+      await newUserChats.save();
+      console.log("Created new UserChats document");
+    } else {
+      await UserChats.updateOne(
+        { userId: userId },
+        {
+          $push: {
+            chats: {
+              _id: savedChat._id,
               title: text.substring(0, 40),
             },
-          ],
-        });
-        await newUserChats.save();
-      } else {
-        await UserChats.updateOne(
-          { userId: userId },
-          {
-            $push: {
-              chats: {
-                _id: savedChat._id,
-                title: text.substring(0, 40),
-              },
-            },
-          }
-        );
-      }
-
-      return {
-        statusCode: 201,
-        body: JSON.stringify({ id: savedChat._id }),
-      };
-    } catch (err) {
-      console.log(err);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "Error creating chat!" }),
-      };
+          },
+        }
+      );
+      console.log("Updated existing UserChats document");
     }
-  })
-);
+
+    res.status(201).json({ id: savedChat._id });
+  } catch (err) {
+    console.error("Error in createChat:", err);
+    res.status(500).json({ error: "Error creating chat: " + err.message });
+  }
+});
+
+export const handler = serverless(app);

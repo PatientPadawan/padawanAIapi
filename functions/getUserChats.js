@@ -9,7 +9,6 @@ const UserChats = UserChatsModule.default || UserChatsModule;
 
 const app = express();
 
-// Configure CORS
 const corsOptions = {
   origin: process.env.CLIENT_URL,
   credentials: true,
@@ -22,7 +21,6 @@ app.use(cors(corsOptions));
 app.get('/.netlify/functions/getUserChats', ClerkExpressRequireAuth(), async (req, res) => {
   console.log("Handling GET request in getUserChats");
   const userId = req.auth.userId;
-  console.log(`User ID: ${userId}`);
 
   try {
     console.log("Connecting to MongoDB");
@@ -30,12 +28,11 @@ app.get('/.netlify/functions/getUserChats', ClerkExpressRequireAuth(), async (re
     console.log("Connected to MongoDB");
 
     console.log("Fetching user chats");
-    console.log("UserChats model:", UserChats);
+    
     if (typeof UserChats.find !== 'function') {
       throw new Error('UserChats.find is not a function');
     }
     const userChats = await UserChats.find({ userId });
-    console.log(`Found ${userChats.length} user chats`);
 
     if (userChats.length > 0 && userChats[0].chats) {
       res.json(userChats[0].chats);
