@@ -5,6 +5,8 @@ import cors from 'cors';
 import serverless from 'serverless-http';
 import express from 'express';
 
+console.log("UserChats model:", UserChats);
+
 const app = express();
 
 const corsOptions = {
