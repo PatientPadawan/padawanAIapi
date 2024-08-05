@@ -7,9 +7,6 @@ import express from 'express';
 
 const app = express();
 
-console.log("Initializing getUserChats function");
-
-// Configure CORS
 const corsOptions = {
   origin: process.env.CLIENT_URL,
   credentials: true,
@@ -19,12 +16,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use((req, res, next) => {
-  console.log(`Received ${req.method} request to ${req.path}`);
-  next();
-});
-
-app.get('/', ClerkExpressRequireAuth(), async (req, res) => {
+app.get('/.netlify/functions/getUserChats', ClerkExpressRequireAuth(), async (req, res) => {
   console.log("Handling GET request in getUserChats");
   const userId = req.auth.userId;
   console.log(`User ID: ${userId}`);
@@ -54,14 +46,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-console.log("Setting up serverless handler");
-const handler = serverless(app);
-
-exports.handler = async (event, context) => {
-  console.log("Handler invoked with event:", JSON.stringify(event));
-  const result = await handler(event, context);
-  console.log("Handler result:", JSON.stringify(result));
-  return result;
-};
-
-console.log("getUserChats function setup complete");
+exports.handler = serverless(app);
