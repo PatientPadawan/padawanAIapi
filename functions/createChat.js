@@ -20,23 +20,29 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Add this line to parse JSON body
+app.use(express.json());
+
 app.post('/.netlify/functions/createChat', ClerkExpressRequireAuth(), async (req, res) => {
   console.log("Handling POST request in createChat");
   const userId = req.auth.userId;
+  console.log(`User ID: ${userId}`);
 
   const { text } = req.body;
+  console.log("Received text:", text);
 
   try {
     console.log("Connecting to MongoDB");
     await mongoose.connect(process.env.MONGO);
     console.log("Connected to MongoDB");
 
-    console.log("Creating new chat");
+    console.log("Creating new chat with text:", text);
     const newChat = new Chat({
       userId: userId,
-      history: [{ role: "user", parts: [{ text }] }],
+      history: [{ role: "user", parts: [{ text: text || "" }] }],
     });
     const savedChat = await newChat.save();
+    console.log(`Created new chat with ID: ${savedChat._id}`);
 
     console.log("Updating UserChats");
     const userChats = await UserChats.find({ userId: userId });
@@ -47,7 +53,7 @@ app.post('/.netlify/functions/createChat', ClerkExpressRequireAuth(), async (req
         chats: [
           {
             _id: savedChat._id,
-            title: text.substring(0, 40),
+            title: text ? text.substring(0, 40) : "New Chat",
           },
         ],
       });
@@ -60,7 +66,7 @@ app.post('/.netlify/functions/createChat', ClerkExpressRequireAuth(), async (req
           $push: {
             chats: {
               _id: savedChat._id,
-              title: text.substring(0, 40),
+              title: text ? text.substring(0, 40) : "New Chat",
             },
           },
         }
