@@ -9,6 +9,15 @@ const UserChats = UserChatsModule.default || UserChatsModule;
 
 const app = express();
 
+const corsOptions = {
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+
 // Add this line to parse JSON body
 app.use(express.json());
 
@@ -20,6 +29,8 @@ app.use((req, res, next) => {
   });
   next();
 });
+
+app.options('*', cors(corsOptions));
 
 app.post('/.netlify/functions/createChat', ClerkExpressRequireAuth(), async (req, res) => {
   console.log("Handling POST request in createChat");
