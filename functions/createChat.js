@@ -14,12 +14,23 @@ const app = express();
 const corsOptions = {
   origin: process.env.CLIENT_URL,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
 
 // Add this line to parse JSON body
 app.use(express.json());
+
+// Add debug logging
+app.use((req, res, next) => {
+  console.log('Request headers:', req.headers);
+  res.on('finish', () => {
+    console.log('Response headers:', res.getHeaders());
+  });
+  next();
+});
 
 app.post('/.netlify/functions/createChat', ClerkExpressRequireAuth(), async (req, res) => {
   console.log("Handling POST request in createChat");
