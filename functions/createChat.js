@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import serverless from 'serverless-http';
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import mongoose from "mongoose";
