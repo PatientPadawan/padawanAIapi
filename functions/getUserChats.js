@@ -8,12 +8,14 @@ const corsWrapper = (handler) => {
       "Access-Control-Allow-Origin": process.env.CLIENT_URL,
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
+      "Access-Control-Allow-Credentials": "true",
     };
 
     if (event.httpMethod === "OPTIONS") {
       return {
-        statusCode: 200,
+        statusCode: 204,
         headers,
+        body: "",
       };
     }
 

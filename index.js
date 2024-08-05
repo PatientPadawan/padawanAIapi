@@ -11,7 +11,7 @@ import UserChats from "./models/userChats.js";
 const port = process.env.PORT || 3000;
 const app = express();
 
-const __filename = fileURLToPah(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(
