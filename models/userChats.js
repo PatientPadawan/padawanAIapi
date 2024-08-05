@@ -18,7 +18,7 @@ const userChatsSchema = new mongoose.Schema(
         },
         createdAt: {
           type: Date,
-          default: Date.now(),
+          default: Date.now,
         },
       },
     ],
@@ -26,5 +26,6 @@ const userChatsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.userchats ||
-  mongoose.model("userchats", userChatsSchema);
+const UserChats = mongoose.models.userchats || mongoose.model("userchats", userChatsSchema);
+
+export default UserChats;

@@ -5,8 +5,6 @@ import cors from 'cors';
 import serverless from 'serverless-http';
 import express from 'express';
 
-console.log("UserChats model:", UserChats);
-
 const app = express();
 
 const corsOptions = {
@@ -29,6 +27,7 @@ app.get('/.netlify/functions/getUserChats', ClerkExpressRequireAuth(), async (re
     console.log("Connected to MongoDB");
 
     console.log("Fetching user chats");
+    console.log("UserChats model:", UserChats); // DEBUG ONLY
     const userChats = await UserChats.find({ userId });
     console.log(`Found ${userChats.length} user chats`);
 
