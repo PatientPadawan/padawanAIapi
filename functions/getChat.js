@@ -11,11 +11,16 @@ const app = express();
 const corsOptions = {
   origin: process.env.CLIENT_URL,
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
 
-app.get('/.netlify/functions/getChat/:chatId', ClerkExpressRequireAuth(), async (req, res) => {
+// Add this line to handle preflight requests
+app.options('*', cors(corsOptions));
+
+app.get('/.netlify/functions/getChat/:chatId', cors(corsOptions), ClerkExpressRequireAuth(), async (req, res) => {
   console.log("Handling GET request in getChat");
   const userId = req.auth.userId;
   const chatId = req.params.chatId;
