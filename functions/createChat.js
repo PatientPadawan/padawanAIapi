@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import serverless from 'serverless-http';
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 import mongoose from "mongoose";
@@ -9,16 +8,6 @@ import UserChatsModule from "../models/userChats.js";
 const UserChats = UserChatsModule.default || UserChatsModule;
 
 const app = express();
-
-// Configure CORS
-const corsOptions = {
-  origin: process.env.CLIENT_URL,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
-app.use(cors(corsOptions));
 
 // Add this line to parse JSON body
 app.use(express.json());
