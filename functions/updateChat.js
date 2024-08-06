@@ -21,7 +21,7 @@ app.use(express.json());
 // Add this line to handle preflight requests
 app.options('*', cors(corsOptions));
 
-app.put('/.netlify/functions/updateChat/:chatId', cors(corsOptions), ClerkExpressRequireAuth(), async (req, res) => {
+app.put('/.netlify/functions/updateChat/:chatId', ClerkExpressRequireAuth(), async (req, res) => {
   console.log("Handling PUT request in updateChat");
   const userId = req.auth.userId;
   const chatId = req.params.chatId;
