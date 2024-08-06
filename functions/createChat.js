@@ -53,6 +53,7 @@ app.post('/.netlify/functions/createChat', ClerkExpressRequireAuth(), async (req
     });
     const savedChat = await newChat.save();
     console.log(`Created new chat with ID: ${savedChat._id}`);
+    console.log(`new chat is: ${savedChat}`)
 
     console.log("Updating UserChats");
     const userChats = await UserChats.find({ userId: userId });
